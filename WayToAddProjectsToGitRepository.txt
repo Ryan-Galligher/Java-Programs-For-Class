@@ -1,1 +1,8 @@
-
+In order to add projects to an already created git repository, you have to:
+    1) create the project in the IDE of choice (using eclipse).
+    2) close the IDE and then move the project folder into the folder connected to the git repository that you had to have set up earlier.
+    3) in the terminal, do "git add ." to add everything that has been changed/added to be prepared to commit to github.
+    4) then do "git commit", and enter the comment to the next git push
+    5) finally do "git push" and then enter the username and password for the git account, and now the project has been pushed up to the repository.
+    6) startup the IDE again, and then remove the project reference that the IDE will still have, since it no longer is in the same place.
+    7) finally, import the project as a _______
