@@ -24,7 +24,7 @@ public class Main
 	static final short YPOSITION = 1;
 	static final short TOTALPILOTS = 20;
 	static final short TOTALVERTICES = 16;
-	private static int[][][] vertices = new int[TOTALPILOTS][TOTALVERTICES][2];
+	private static double[][][] vertices = new double[TOTALPILOTS][TOTALVERTICES][2];
 	private static String[] pilotNames = new String[TOTALPILOTS];
 	
 	public static void main (String [] args)
@@ -54,7 +54,7 @@ public class Main
 			
 			//call saveOutput() to output the calculated information from calculateAreas() into a file,
 			saveOutput(calculateAreas(), writeFile);
-			
+			System.out.println("Finished");
 			//and end the program.
 			
 		}catch(Exception e) {e.printStackTrace(); System.exit(1);}								//DELETE PRINTSTACKTRACE WHEN FINISHED
@@ -99,12 +99,18 @@ public class Main
 		for (short numPilotsProcessed = 0; numPilotsProcessed < TOTALPILOTS && canContinueReadingFile(s); numPilotsProcessed++)
 		{
 			toParse = s.nextLine().split(" ");
+			if(toParse[0].equals(""))
+			{
+				numPilotsProcessed--;
+				continue;
+			}
 			pilotNames[numPilotsProcessed] = toParse[0];
+			System.out.println("The Pilot that was just put in is: " + pilotNames[numPilotsProcessed]);
 			for (short vertexSpot = 1; vertexSpot < TOTALVERTICES -1 ; vertexSpot++ )
 			{
 				//If there is a vertex for that possible spot, then put in the grabbed int for it, else fill it with null
-				vertices[numPilotsProcessed][vertexSpot - 1][0] = (vertexSpot < toParse.length) ? Integer.parseInt(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
-				vertices[numPilotsProcessed][vertexSpot - 1][1] = (vertexSpot < toParse.length) ? Integer.parseInt(toParse[vertexSpot].split(",")[1]):0;
+				vertices[numPilotsProcessed][vertexSpot - 1][0] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
+				vertices[numPilotsProcessed][vertexSpot - 1][1] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[1]):0;
 
 			}
 		}
@@ -123,7 +129,7 @@ public class Main
 			//2) take the next line, then determine if there is anything left in the file
 		//and will return true if there are any other lines in the file and false if there aren't.
 		
-		if(s.hasNextLine())
+		if(s.hasNextLine() )
 			return true;
 		else
 			return false;
@@ -169,10 +175,12 @@ public class Main
 			//throw exception
 		for(int i = 0; i < pilotNames.length ; i++)
 		{
+			System.out.println("The currently read name is: " + pilotNames[i]);
 			if(pilotNames[i] != null)
-				save.write(pilotNames[i] + " " + areas[i]);
+				save.write(pilotNames[i] + " " + String.format("%.2f", areas[i]) + " \n");
 			else
 				break;
+			System.out.println(i + pilotNames[i] + " " +String.format("%.2f", areas[i]) + " \n");
 		}
 		save.close();
 	}
@@ -202,18 +210,20 @@ public class Main
 							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];
 						else
 						{
-							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];
+							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];  
+							//stuff
 							break;
 						}
 					}
-					save.write(total);
+					total+="\n";
+					save.write(total + " \n");
 				}
 				else
 					break;
 			}
 			save.close();
 			//It will then save the information to the file.
-		//}catch(Exception e) {e.printStackTrace();}							//************************ASK ABOUT IF FOR GRADING WE NEED TO NOT CLEAR OUT THE OUTPUT FILE
+		//}catch(Exception e) {e.printStackTrace();}							
 		
 	}
 }
