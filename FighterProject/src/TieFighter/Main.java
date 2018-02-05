@@ -40,7 +40,7 @@ public class Main
 			
 			while(readFile == null || writeFile == null)	//If one of the files was not found properly, asks the user to input the file path
 			{
-				System.out.println("Please Indicate Path To The File To " + ((readFile == null) ? "Read":"Write"));
+				//System.out.println("Please Indicate Path To The File To " + ((readFile == null) ? "Read":"Write"));		//cOMMENTED OUT AFTERWARDS***
 				if(readFile == null)
 					readFile = checkFile(s.nextLine(), false);
 				else
@@ -54,10 +54,10 @@ public class Main
 			
 			//call saveOutput() to output the calculated information from calculateAreas() into a file,
 			saveOutput(calculateAreas(), writeFile);
-			System.out.println("Finished");
+			//System.out.println("Finished");
 			//and end the program.
 			
-		}catch(Exception e) {e.printStackTrace(); System.exit(1);}								//DELETE PRINTSTACKTRACE WHEN FINISHED
+		}catch(Exception e) { System.exit(1);}
 	}
 	/**
 	 * If the file is readable and able to be created it creates a File
@@ -80,7 +80,7 @@ public class Main
 					new FileWriter(pathToFile).close();
 				return f;
 			}
-		}catch(Exception e) {e.printStackTrace();return null;}					//DELETE PRINTSTACKTRACE WHEN FINISHED
+		}catch(Exception e) {return null;}
 	}
 	
 	/**
@@ -105,8 +105,8 @@ public class Main
 				continue;
 			}
 			pilotNames[numPilotsProcessed] = toParse[0];
-			System.out.println("The Pilot that was just put in is: " + pilotNames[numPilotsProcessed]);
-			for (short vertexSpot = 1; vertexSpot < TOTALVERTICES -1 ; vertexSpot++ )
+			//System.out.println("The Pilot that was just put in is: " + pilotNames[numPilotsProcessed]);		//COMMENTED OUT AFTERWARDS***
+			for (short vertexSpot = 1; vertexSpot < TOTALVERTICES  ; vertexSpot++ )					//CHANGED AS IT ACCIDENTALLY CUT OFF LAST READ IN VALUE*************
 			{
 				//If there is a vertex for that possible spot, then put in the grabbed int for it, else fill it with null
 				vertices[numPilotsProcessed][vertexSpot - 1][0] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
@@ -122,7 +122,7 @@ public class Main
 	 * @param s the Scanner connected to the file to be read from
 	 * @return if there are still more values in the File
 	 */
-	private static boolean canContinueReadingFile(Scanner s)				//**************************************************FINISH THIS
+	private static boolean canContinueReadingFile(Scanner s)	
 	{
 		//When called, can read file will attempt to determine if there are any other values by:
 			//1) seeing if there is no \n so no next line
@@ -153,12 +153,14 @@ public class Main
 			//Then save the calculated value to another array.
 		double area = 0.0;
 		double[] areas = new double[TOTALPILOTS];
-		for(int pilot=0; pilot < TOTALPILOTS - 1; pilot++)
+		for(int pilot=0; pilot < TOTALPILOTS ; pilot++)		//CHANGED AS WAS CUTTING OFF CALCULATING LAST USER********
 		{
 			area = 0.0;
 			for(int vertice = 0; vertice < vertices[pilot].length -1; vertice++)
 			{
-				area += (vertices[pilot][vertice + 1][XPOSITION] + vertices[pilot][vertice][XPOSITION])*(vertices[pilot][vertice + 1][YPOSITION] - vertices[pilot][vertice][YPOSITION]);
+				if(vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] ) )			//ADDED IN AFTER THE FACT DUE TO ACCIDENTALLY ADDING NON-EXISTANT POINTS TO AREA******
+					area += (vertices[pilot][vertice + 1][XPOSITION] + vertices[pilot][vertice][XPOSITION])*(vertices[pilot][vertice + 1][YPOSITION] - vertices[pilot][vertice][YPOSITION]);
+				//System.out.println(vertice +"-"+(vertice+1) + ":\t"+area + "	" + (vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] )) + " " +vertices[pilot][vertice][XPOSITION]+ " "+ vertices[pilot][vertice][YPOSITION]);		//ADDED IN AFTER THE FACT TO HELP TEST ERRORS.
 			}
 			area = Math.abs(area) * 1/2;
 			areas[pilot] = area;
@@ -175,12 +177,12 @@ public class Main
 			//throw exception
 		for(int i = 0; i < pilotNames.length ; i++)
 		{
-			System.out.println("The currently read name is: " + pilotNames[i]);
+			//System.out.println("The currently read name is: " + pilotNames[i]);				//COMMENTED OUT AFTERWARDS***
 			if(pilotNames[i] != null)
 				save.write(pilotNames[i] + " " + String.format("%.2f", areas[i]) + " \n");
 			else
 				break;
-			System.out.println(i + pilotNames[i] + " " +String.format("%.2f", areas[i]) + " \n");
+			//System.out.println(i + pilotNames[i] + "\t" +String.format("%.2f", areas[i]) + " \n");		//COMMENTED OUT AFTERWARDS***
 		}
 		save.close();
 	}
