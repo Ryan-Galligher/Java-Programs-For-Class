@@ -1,3 +1,4 @@
+package Hw2;
 import java.util.Scanner;
 
 public class MoneyReturn {
