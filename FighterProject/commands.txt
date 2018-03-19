@@ -1,0 +1,6 @@
+sort pilot dec
+Joe
+69.50
+sort area asc
+search Peter
+8.32f

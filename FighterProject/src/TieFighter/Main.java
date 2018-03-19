@@ -13,51 +13,71 @@ public class Main
 	 * Net ID:	rpg170130
 	 */
 	
-	//[1][2][3] for 3D array are for: 
-	//[1] is for every single pilot
-	//[2] is for every single vertex that the pilot made
-	//[3] is for the x and y coordinates, with x =0 and y=1
 	
-	static final String DEFAULTPATHTOREAD="pilot_routes.txt";
-	static final String DEFAULTPATHTOWRITE=" pilot_areas.txt";
-	static final short XPOSITION = 0;
-	static final short YPOSITION = 1;
-	static final short TOTALPILOTS = 20;
-	static final short TOTALVERTICES = 16;
-	private static double[][][] vertices = new double[TOTALPILOTS][TOTALVERTICES][2];
-	private static String[] pilotNames = new String[TOTALPILOTS];
+	public static final String DEFAULTPATHTOREADINFO="pilot_routes.txt";
+	public static final String DEFAULTPATHTOREADCOMMAND="commands.txt";
+	public static final String DEFAULTPATHTOWRITEINFO="pilot_areas.txt";
+	public static final String DEFAULTPATHTOWRITECOMMANDS="results.txt";
+	public static final short XPOSITION = 0;
+	public static final short YPOSITION = 1;
+	
+	
+	public static final String INFOREGEX = "([A-Za-z0-9\\-']+\\s)+((-?\\d+(\\.\\d+)?||\\.\\d+),(-?\\d+(\\.\\d+)?||\\.\\d+)\\s?){4,}";
+	public static final String COMMANDREGEX = "sort\\s(area||pilot)\\s(asc||dec)||(-?\\\\d+(\\.\\d+)?||\\.\\d+)||([A-Za-z\\-']+\\s?)+";
+	public static final String COMMANDREGEXSORT = "sort\\s(area||pilot)\\s(asc||dec)";
+	public static final String COMMANDREGEXAREA = "(-?\\d+(\\.\\d+)?||\\.\\d+)";
+	public static final String COMMANDREGEXNAME = "([A-Za-z\\-']+\\s?)+";
+	
+	private static LinkedList list;
 	
 	public static void main (String [] args)
 	{
 		try {
+			
+			list = new LinkedList();
+			
 			//Program called through the main method.
 			//call checkFile(String), and
 				//if true then save the file,
 				//else throw exception.
-			File readFile = checkFile(DEFAULTPATHTOREAD, false);
-			File writeFile = checkFile(DEFAULTPATHTOWRITE, true);
+			File readInfo = checkFile(DEFAULTPATHTOREADINFO, false);
+			File readCommands = checkFile(DEFAULTPATHTOREADCOMMAND, false);
+			File writeList = checkFile(DEFAULTPATHTOWRITEINFO, true);
+			File writeCommands = checkFile(DEFAULTPATHTOWRITECOMMANDS,true);
 			Scanner s = new Scanner(System.in);
 			
-			while(readFile == null || writeFile == null)	//If one of the files was not found properly, asks the user to input the file path
+			while( writeCommands == null ||readInfo == null || writeList == null || readCommands == null)	//If one of the files was not found properly, asks the user to input the file path
 			{
-				//System.out.println("Please Indicate Path To The File To " + ((readFile == null) ? "Read":"Write"));		//cOMMENTED OUT AFTERWARDS***
-				if(readFile == null)
-					readFile = checkFile(s.nextLine(), false);
-				else
-					writeFile = checkFile(s.nextLine(), true);
+				System.out.println("Please Indicate Path To The File To " + ((readInfo == null) ? "Read":"Write"));
+				if(readInfo == null)
+					readInfo = checkFile(s.nextLine(), false);
+				if(readCommands==null)
+					readCommands = checkFile(s.nextLine(),false);
+				if(writeList == null)
+					writeList = checkFile(s.nextLine(), true);
+				if(writeCommands == null)
+					writeCommands = checkFile(s.nextLine(), true);
+			
 			}
 			s.close();
-			s = new Scanner(readFile);
+			s = new Scanner(readInfo);
 			//The program then calls readFromFile(Scanner), which will begin to read in the file.
-			readFromFile(s);
+			readFromFile1(s);
 			s.close();
 			
-			//call saveOutput() to output the calculated information from calculateAreas() into a file,
-			saveOutput(calculateAreas(), writeFile);
+			System.out.print("The current list is: \n" + list.toString());
+			
+			s = new Scanner(readCommands);
+			String output = readFromFile2(s);
+			s.close();
+			
+			saveToFile(output,writeCommands);
+			
+			saveToFile(list.toString(),writeList);
 			//System.out.println("Finished");
 			//and end the program.
 			
-		}catch(Exception e) { System.exit(1);}
+		}catch(Exception e) { e.printStackTrace();System.exit(1);}
 	}
 	/**
 	 * If the file is readable and able to be created it creates a File
@@ -83,11 +103,47 @@ public class Main
 		}catch(Exception e) {return null;}
 	}
 	
+	private static String readFromFile2(Scanner s)
+	{
+		System.out.println("\tEntered readFromFile2");
+		String output="";
+		while(canContinueReadingFile(s))
+		{
+			String str = s.nextLine();
+			System.out.println("\t\tdoes " + str + " match as a command regex? " + str.matches(COMMANDREGEX));
+			if(!str.matches(COMMANDREGEX))
+				continue;
+			if(str.matches(COMMANDREGEXSORT))
+			{
+				String[] stuff = str.split(" ");
+				System.out.println("\t\t\tStarted sorting");
+				list.sort(stuff[2].contains("asc"), stuff[1].contains("pilot"));
+				System.out.println("\t\t\tFinished sorting");
+				System.out.println("\t\tAnd the toString is: " + list.toString());
+				output+= String.format("%30s\t\tHead: %30s Tail: %30s\r\n", str,list.getInfo(0), list.getInfo(list.size()-1));
+			}
+			else {
+				if(str.matches(COMMANDREGEXAREA))
+				{
+					double d = ((double)Math.round(Double.parseDouble(str)*100))/100.00;
+					output+=String.format("%30s\t\t%30f %9s\r\n", str,d,(list.containsArea(d) ? "found":"not found"));
+					//************************************************************************************************
+				}
+				if(str.matches(COMMANDREGEXNAME))
+				{
+					output+=String.format("%30s\t\t%30s %9s\r\n", str,str,(list.containsPilot(str) ? "found":"not found"));
+				}
+			}
+			System.out.println("\t\tCurrently the output after doing things is: \n" + output);
+		}
+		return output;
+	}
+	
 	/**
 	 * Attempts to read all the information from the file and save it to {@link vertices}
 	 * @param s The Scanner of the file that is to be read from
 	 */
-	private static void readFromFile(Scanner s)
+	private static void readFromFile1(Scanner s)
 	{
 		//calls the method canReadFile(Scanner s) and if there is still more information that can be read in,
 			//it then reads in the pilot and the all of the vertices
@@ -96,25 +152,53 @@ public class Main
 		//if there are too many pilots/vertices/coordinates, ignore them
 		//if there are too few, then fill the excess with null
 		String[] toParse;
-		for (short numPilotsProcessed = 0; numPilotsProcessed < TOTALPILOTS && canContinueReadingFile(s); numPilotsProcessed++)
+		int spot=0;
+		String name = "";
+		double[][] vertices;
+		String str;
+		
+		System.out.println("\tEntered into readFromFile1");
+		
+		while (canContinueReadingFile(s))
 		{
-			toParse = s.nextLine().split(" ");
-			if(toParse[0].equals(""))
-			{
-				numPilotsProcessed--;
+			str =s.nextLine();
+			
+			System.out.println("\t\tJust read " + str + " from file");
+			
+			if(!str.matches(INFOREGEX))
 				continue;
+			toParse = str.split(" ");
+			if(toParse[0].equals(""))
+				continue;
+			
+			//Now needs to go through to determine how many different many pieces of the now cut up array are names
+			name="";
+			for(int i = 0; i < toParse.length;i++)
+			{
+				if(toParse[i].matches("-?\\d+(\\.\\d+)?,-?\\d+(\\.\\d+)?"))
+				{
+					spot=i;
+					break;
+				}
+				name+=toParse[i]+" ";
 			}
-			pilotNames[numPilotsProcessed] = toParse[0];
-			//System.out.println("The Pilot that was just put in is: " + pilotNames[numPilotsProcessed]);		//COMMENTED OUT AFTERWARDS***
-			for (short vertexSpot = 1; vertexSpot < TOTALVERTICES  ; vertexSpot++ )					//CHANGED AS IT ACCIDENTALLY CUT OFF LAST READ IN VALUE*************
+			name=name.substring(0, name.length()-1);
+			System.out.println("\t\t\tThe Name is: " + name);
+			
+			vertices = new double[toParse.length-spot][2];
+			
+			//Now goes through and makes one double array with all of the coordinates
+			for (int vertexSpot = spot; vertexSpot < toParse.length  ; vertexSpot++ )
 			{
 				//If there is a vertex for that possible spot, then put in the grabbed int for it, else fill it with null
-				vertices[numPilotsProcessed][vertexSpot - 1][0] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
-				vertices[numPilotsProcessed][vertexSpot - 1][1] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[1]):0;
-
+				vertices[vertexSpot-spot][XPOSITION] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
+				vertices[vertexSpot-spot][YPOSITION] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[1]):0;
 			}
+		
+			list.add(name, calculateArea(vertices));
 		}
 		
+		System.out.println("\tOutside readFile1 while loop");
 	}
 
 	/**
@@ -139,10 +223,9 @@ public class Main
 	 * Calculates the areas of the paths of the different pilots
 	 * @return the areas of the different pilots
 	 */
-	private static double[] calculateAreas()
+	private static double calculateArea(double[][] vertices)
 	{
 		//takes the calculated area and add it to an area array.
-		//For every pilot that is put into the pilot array,
 			//will calculate the the area by calculating:
 				//For every vertice besides the last one
 					//add the current x vertice and the next x vertice,
@@ -150,82 +233,39 @@ public class Main
 					//multiply those 2 values together
 					//add the value to the overall total,
 				//and afterwards multiply the total by 1/2.
-			//Then save the calculated value to another array.
-		double area = 0.0;
-		double[] areas = new double[TOTALPILOTS];
-		for(int pilot=0; pilot < TOTALPILOTS ; pilot++)		//CHANGED AS WAS CUTTING OFF CALCULATING LAST USER********
+		System.out.print("\t\t\tvertices are: ");
+		for(int i = 0; i < vertices.length;i++)
 		{
-			area = 0.0;
-			for(int vertice = 0; vertice < vertices[pilot].length -1; vertice++)
-			{
-				if(vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] ) )			//ADDED IN AFTER THE FACT DUE TO ACCIDENTALLY ADDING NON-EXISTANT POINTS TO AREA******
-					area += (vertices[pilot][vertice + 1][XPOSITION] + vertices[pilot][vertice][XPOSITION])*(vertices[pilot][vertice + 1][YPOSITION] - vertices[pilot][vertice][YPOSITION]);
-				//System.out.println(vertice +"-"+(vertice+1) + ":\t"+area + "	" + (vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] )) + " " +vertices[pilot][vertice][XPOSITION]+ " "+ vertices[pilot][vertice][YPOSITION]);		//ADDED IN AFTER THE FACT TO HELP TEST ERRORS.
-			}
-			area = Math.abs(area) * 1/2;
-			areas[pilot] = area;
+			System.out.print(vertices[i][XPOSITION]+","+vertices[i][YPOSITION]+" ");
 		}
-		return areas;
+		System.out.println("");
+		
+		double area = 0.0;
+		for(int vertice = 0; vertice < vertices.length -1; vertice++)
+		{
+			if(vertice == 0 || ( vertices[vertice][XPOSITION] != vertices[0][XPOSITION] || vertices[vertice][YPOSITION] != vertices[0][YPOSITION] ) )
+				area += (vertices[vertice + 1][XPOSITION] + vertices[vertice][XPOSITION])*(vertices[vertice + 1][YPOSITION] - vertices[vertice][YPOSITION]);
+		}
+		area = Math.abs(area) * 1/2;
+		System.out.println("\t\t\t\tThe area that was found for this was: " + area);
+		return area;
 	}
+
 	
-	
-	
-	private static void saveOutput(double[] areas, File file) throws FileNotFoundException
+	private static void saveToFile(String info, File file) throws FileNotFoundException
 	{
 		PrintWriter save = new PrintWriter(file);
-		//if can't write to the chosen file,
-			//throw exception
-		for(int i = 0; i < pilotNames.length ; i++)
+
+		String[] s = info.split("\n");
+		for(int i = 0; i < s.length; i++)
 		{
-			//System.out.println("The currently read name is: " + pilotNames[i]);				//COMMENTED OUT AFTERWARDS***
-			if(pilotNames[i] != null)
-				save.write(pilotNames[i] + " " + String.format("%.2f", areas[i]) + " \n");
-			else
-				break;
-			//System.out.println(i + pilotNames[i] + "\t" +String.format("%.2f", areas[i]) + " \n");		//COMMENTED OUT AFTERWARDS***
+			save.write(s[i]);
+			save.println();
 		}
+		
 		save.close();
 	}
 	
 	
-	/**
-	 * Saves the information about the pilots and vertices to {@bold file}
-	 * @param file File to write the read in information formatted correctly
-	 */
-	private static void saveReadOutput(File file) throws FileNotFoundException
-	{ 	
-		//try {
-			PrintWriter save = new PrintWriter(file);
-			//if can't write to the chosen file,
-				//throw exception
-			String total;
-			short spot;
-			for(int i = 0; i < pilotNames.length ; i++)
-			{
-				if(pilotNames[i] != null)
-				{
-					spot=0;
-					total = pilotNames[i];
-					while(spot < TOTALVERTICES )
-					{
-						if(vertices[i][spot][XPOSITION] != vertices[i][0][XPOSITION] && vertices[i][spot][YPOSITION] != vertices[i][0][YPOSITION])		//if this current point is the same as the first, then it needs to input it to be printed and then afterwards exit
-							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];
-						else
-						{
-							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];  
-							//stuff
-							break;
-						}
-					}
-					total+="\n";
-					save.write(total + " \n");
-				}
-				else
-					break;
-			}
-			save.close();
-			//It will then save the information to the file.
-		//}catch(Exception e) {e.printStackTrace();}							
-		
-	}
+	
 }

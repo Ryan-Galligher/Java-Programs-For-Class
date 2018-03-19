@@ -1,0 +1,231 @@
+package TieFighter;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+public class OldProject1Main
+{
+	/*
+	 * Name: 	Ryan Galligher
+	 * Net ID:	rpg170130
+	 */
+	
+	//[1][2][3] for 3D array are for: 
+	//[1] is for every single pilot
+	//[2] is for every single vertex that the pilot made
+	//[3] is for the x and y coordinates, with x =0 and y=1
+	
+	static final String DEFAULTPATHTOREAD="pilot_routes.txt";
+	static final String DEFAULTPATHTOWRITE=" pilot_areas.txt";
+	static final short XPOSITION = 0;
+	static final short YPOSITION = 1;
+	static final short TOTALPILOTS = 20;
+	static final short TOTALVERTICES = 16;
+	private static double[][][] vertices = new double[TOTALPILOTS][TOTALVERTICES][2];
+	private static String[] pilotNames = new String[TOTALPILOTS];
+	
+	public static void main (String [] args)
+	{
+		try {
+			//Program called through the main method.
+			//call checkFile(String), and
+				//if true then save the file,
+				//else throw exception.
+			File readFile = checkFile(DEFAULTPATHTOREAD, false);
+			File writeFile = checkFile(DEFAULTPATHTOWRITE, true);
+			Scanner s = new Scanner(System.in);
+			
+			while(readFile == null || writeFile == null)	//If one of the files was not found properly, asks the user to input the file path
+			{
+				//System.out.println("Please Indicate Path To The File To " + ((readFile == null) ? "Read":"Write"));		//cOMMENTED OUT AFTERWARDS***
+				if(readFile == null)
+					readFile = checkFile(s.nextLine(), false);
+				else
+					writeFile = checkFile(s.nextLine(), true);
+			}
+			s.close();
+			s = new Scanner(readFile);
+			//The program then calls readFromFile(Scanner), which will begin to read in the file.
+			readFromFile(s);
+			s.close();
+			
+			//call saveOutput() to output the calculated information from calculateAreas() into a file,
+			saveOutput(calculateAreas(), writeFile);
+			//System.out.println("Finished");		//Commented out***
+			//and end the program.
+			
+		}catch(Exception e) { System.exit(1);}
+	}
+	/**
+	 * If the file is readable and able to be created it creates a File
+	 * @param pathToFile The String of the path to the file that should be created
+	 * @param replaceFile If the file could be zeroed out if one already exists
+	 * @return The File if it was able to be created/found
+	 */
+	private static File checkFile(String pathToFile, boolean replaceFile)		//************************ASK ABOUT IF FOR GRADING WE NEED TO NOT CLEAR OUT THE OUTPUT FILE: Answer:Yes clear it
+	{
+		//When called, attempts to set up a File with the path provided,
+			//and returns the File if it sets it up correctly
+			//and returns null if it can't
+		try {
+			if(!replaceFile)
+				return new File(pathToFile);
+			else
+			{
+				File f = new File(pathToFile);
+				if(f.isFile())	//If the file already exists when it shouldn't have anything in it, clear it out
+					new FileWriter(pathToFile).close();
+				return f;
+			}
+		}catch(Exception e) {return null;}
+	}
+	
+	/**
+	 * Attempts to read all the information from the file and save it to {@link vertices}
+	 * @param s The Scanner of the file that is to be read from
+	 */
+	private static void readFromFile(Scanner s)
+	{
+		//calls the method canReadFile(Scanner s) and if there is still more information that can be read in,
+			//it then reads in the pilot and the all of the vertices
+			//cut up the name of the pilot and vertices from each other
+			//and will add them to the 3d array and the pilot array.
+		//if there are too many pilots/vertices/coordinates, ignore them
+		//if there are too few, then fill the excess with null
+		String[] toParse;
+		for (short numPilotsProcessed = 0; numPilotsProcessed < TOTALPILOTS && canContinueReadingFile(s); numPilotsProcessed++)
+		{
+			toParse = s.nextLine().split(" ");
+			if(toParse[0].equals(""))
+			{
+				numPilotsProcessed--;
+				continue;
+			}
+			pilotNames[numPilotsProcessed] = toParse[0];
+			//System.out.println("The Pilot that was just put in is: " + pilotNames[numPilotsProcessed]);		//COMMENTED OUT AFTERWARDS***
+			for (short vertexSpot = 1; vertexSpot < TOTALVERTICES  ; vertexSpot++ )					//CHANGED AS IT ACCIDENTALLY CUT OFF LAST READ IN VALUE*************
+			{
+				//If there is a vertex for that possible spot, then put in the grabbed int for it, else fill it with null
+				vertices[numPilotsProcessed][vertexSpot - 1][0] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[0]):0;	//where default nonexistent point is set as 0
+				vertices[numPilotsProcessed][vertexSpot - 1][1] = (vertexSpot < toParse.length) ? Double.parseDouble(toParse[vertexSpot].split(",")[1]):0;
+
+			}
+		}
+		
+	}
+
+	/**
+	 * Determines if there are still any other values left in the file that can be read in
+	 * @param s the Scanner connected to the file to be read from
+	 * @return if there are still more values in the File
+	 */
+	private static boolean canContinueReadingFile(Scanner s)	
+	{
+		//When called, can read file will attempt to determine if there are any other values by:
+			//1) seeing if there is no \n so no next line
+			//2) take the next line, then determine if there is anything left in the file
+		//and will return true if there are any other lines in the file and false if there aren't.
+		
+		if(s.hasNextLine() )
+			return true;
+		else
+			return false;
+	}
+	
+	/**
+	 * Calculates the areas of the paths of the different pilots
+	 * @return the areas of the different pilots
+	 */
+	private static double[] calculateAreas()
+	{
+		//takes the calculated area and add it to an area array.
+		//For every pilot that is put into the pilot array,
+			//will calculate the the area by calculating:
+				//For every vertice besides the last one
+					//add the current x vertice and the next x vertice,
+					//subtract the next y vertice and the current y vertices,
+					//multiply those 2 values together
+					//add the value to the overall total,
+				//and afterwards multiply the total by 1/2.
+			//Then save the calculated value to another array.
+		double area = 0.0;
+		double[] areas = new double[TOTALPILOTS];
+		for(int pilot=0; pilot < TOTALPILOTS ; pilot++)		//CHANGED AS WAS CUTTING OFF CALCULATING LAST USER********
+		{
+			area = 0.0;
+			for(int vertice = 0; vertice < vertices[pilot].length -1; vertice++)
+			{
+				if(vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] ) )			//ADDED IN AFTER THE FACT DUE TO ACCIDENTALLY ADDING NON-EXISTANT POINTS TO AREA******
+					area += (vertices[pilot][vertice + 1][XPOSITION] + vertices[pilot][vertice][XPOSITION])*(vertices[pilot][vertice + 1][YPOSITION] - vertices[pilot][vertice][YPOSITION]);
+				//System.out.println(vertice +"-"+(vertice+1) + ":\t"+area + "	" + (vertice == 0 || ( vertices[pilot][vertice][XPOSITION] != vertices[pilot][0][XPOSITION] || vertices[pilot][vertice][YPOSITION] != vertices[pilot][0][YPOSITION] )) + " " +vertices[pilot][vertice][XPOSITION]+ " "+ vertices[pilot][vertice][YPOSITION]);		//ADDED IN AFTER THE FACT TO HELP TEST ERRORS.
+			}
+			area = Math.abs(area) * 1/2;
+			areas[pilot] = area;
+		}
+		return areas;
+	}
+	
+	
+	
+	private static void saveOutput(double[] areas, File file) throws FileNotFoundException
+	{
+		PrintWriter save = new PrintWriter(file);
+		//if can't write to the chosen file,
+			//throw exception
+		for(int i = 0; i < pilotNames.length ; i++)
+		{
+			//System.out.println("The currently read name is: " + pilotNames[i]);				//COMMENTED OUT AFTERWARDS***
+			if(pilotNames[i] != null)
+				save.write(pilotNames[i] + " " + String.format("%.2f", areas[i]) + " \n");
+			else
+				break;
+			//System.out.println(i + pilotNames[i] + "\t" +String.format("%.2f", areas[i]) + " \n");		//COMMENTED OUT AFTERWARDS***
+		}
+		save.close();
+	}
+	
+	
+	/**
+	 * Saves the information about the pilots and vertices to {@bold file}
+	 * @param file File to write the read in information formatted correctly
+	 */
+	private static void saveReadOutput(File file) throws FileNotFoundException
+	{ 	
+		//try {
+			PrintWriter save = new PrintWriter(file);
+			//if can't write to the chosen file,
+				//throw exception
+			String total;
+			short spot;
+			for(int i = 0; i < pilotNames.length ; i++)
+			{
+				if(pilotNames[i] != null)
+				{
+					spot=0;
+					total = pilotNames[i];
+					while(spot < TOTALVERTICES )
+					{
+						if(vertices[i][spot][XPOSITION] != vertices[i][0][XPOSITION] && vertices[i][spot][YPOSITION] != vertices[i][0][YPOSITION])		//if this current point is the same as the first, then it needs to input it to be printed and then afterwards exit
+							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];
+						else
+						{
+							total += " " + vertices[i][spot][XPOSITION] + "," + vertices[i][spot][YPOSITION];  
+							//stuff
+							break;
+						}
+					}
+					total+="\n";
+					save.write(total + " \n");
+				}
+				else
+					break;
+			}
+			save.close();
+			//It will then save the information to the file.
+		//}catch(Exception e) {e.printStackTrace();}							
+		
+	}
+}
