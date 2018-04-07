@@ -1,5 +1,11 @@
 package Hw3;
 
+//package Hw3;
+/**
+ * 
+ * @author Ryan Galligher, rpg170130
+ *
+ */
 import java.util.ArrayList;
 import java.util.Scanner;
 

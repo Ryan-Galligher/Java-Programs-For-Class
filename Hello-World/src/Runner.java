@@ -3,7 +3,10 @@ import java.util.Scanner;
 
 public class Runner {
 
+	private int[] things = {0,1,2,3,4,5,6,7,8,9,10};
+	
 	public static void main(String[] args) {
+		
 /*		Scanner scan = new Scanner(System.in);
 		System.out.println("Enter 3 points for a triangle: ");
 		String stuff1 = scan.nextLine();
@@ -49,7 +52,7 @@ public class Runner {
 		
 		String stuff = "janfebmaraprmayjunjulaugsepoctnovdec".substring((status-1)*3, (status-1)*3+3);
 	*/
-		Scanner scan = new Scanner(System.in);
+		/*Scanner scan = new Scanner(System.in);
 		System.out.println("Enter a point with two coordinates: ");
 		String stuff1 = scan.nextLine();
 		scan.close();
@@ -60,5 +63,13 @@ public class Runner {
 		double y=Double.parseDouble(thing1[1]);
 		boolean isIn = (x < reclen && (x *-1) > (reclen * -1) && y < recwid && (y *-1) > (recwid * -1));
 		System.out.println( "Point (" + x + "," + y + " " + ((isIn) ? "is":"is not") + " in the rectangle");
+		*/
+	}
+	
+	public int printStuff()
+	{
+		//static int i = 0, sum = 0;	//Can't have static local variables
+		return 0;
+		
 	}
 }

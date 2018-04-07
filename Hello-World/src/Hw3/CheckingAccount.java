@@ -1,5 +1,11 @@
 package Hw3;
 
+/**
+ * 
+ * @author Ryan Galligher, rpg170130
+ *
+ */
+
 public class CheckingAccount extends Account
 {
 	CheckingAccount(double balance, double annualInterest)
