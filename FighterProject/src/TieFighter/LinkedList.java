@@ -1,10 +1,10 @@
 package TieFighter;
 
-/**
- * 
- * @author ryan
- *
+/*
+ * Name: 	Ryan Galligher
+ * Net ID:	rpg170130
  */
+
 public class LinkedList
 {
 	Node<Payload> head;
@@ -46,7 +46,10 @@ public class LinkedList
 		spot=head;
 		return "";	
 	}
-	
+	/**
+	 * Adds the Payload object to the list
+	 * @param item the Payload to be added to the list
+	 */
 	public void add(Payload item)
 	{
 		if(head!=null)
@@ -64,12 +67,19 @@ public class LinkedList
 		spot=head;
 
 	}
-	
+	/**
+	 * Adds the pilot name and area to the list
+	 * @param name name of the pilot
+	 * @param area area that the pilot travels
+	 */
 	public void add(String name, double area)
 	{
 		add(new Payload(name, area));
 	}
-	
+	/**
+	 * 
+	 * @return the size of the linked list
+	 */
 	public int size()
 	{
 		/*int size=0;
@@ -119,11 +129,16 @@ public class LinkedList
 		return d;
 	}
 	
+	/**
+	 * Searches the list for the given pilot area and returns if there are any
+	 * @param d the area to search for in the list
+	 * @return if there is at least one instance of the given area stored within the list
+	 */
 	public boolean containsArea(double d)
 	{
 		while(spot!=null)
 		{
-			if(spot.getPayload().getPatrolArea()!=d)
+			if( (((double)Math.round(spot.getPayload().getPatrolArea())*100)/100.0)!=d)
 				spot=spot.nextItem;
 			else
 				break;
@@ -133,6 +148,11 @@ public class LinkedList
 		return returns;
 	}
 	
+	/**
+	 * Searches the list for the given pilot name and returns a boolean of if the list contains it.
+	 * @param s The name of the pilot to be searching for
+	 * @return if there is at least one pilot within the list with the given name.
+	 */
 	public boolean containsPilot(String s)
 	{
 		while(spot!=null)
@@ -147,11 +167,16 @@ public class LinkedList
 		return returns;
 	}
 	
+	/**
+	 * Returns the info stored within the node at {@bold place} as a String
+	 * @param place the spot in the list to return the information stored in the node
+	 * @return String of the information stored in the node, and will return null if invalid spot number
+	 */
 	public String getInfo(int place)
 	{
 		System.out.println("\t\tGetting info at place " + place + " and the currently recorded size of the list is " + size);
 		if(place>=size&&place<0)
-			return "";
+			return null;
 		for(int i = 0; i < place-1;i++)
 		{
 			System.out.print("Current spot is value " + spot);
@@ -166,6 +191,12 @@ public class LinkedList
 	}
 	
 	//used by the sort method so don't need many if statements in method
+	/**
+	 * Used to determine if the contents of a node are the same as a given object.
+	 * @param one An Object to be compared
+	 * @param two A Node<Payload> to determine
+	 * @return if the two contain the same information
+	 */
 	public boolean doTheyEqual(Object one, Node<Payload> two)
 	{
 		if(one instanceof String)
@@ -184,9 +215,9 @@ public class LinkedList
 	//Also used by the sort method
 	/**
 	 * Compares the two given Objects and returns back a numerical value as to the difference between them. So positive number means item1>item2, negative number means item1<item2, 0 means item1==item2
-	 * @param item1
-	 * @param item2
-	 * @return
+	 * @param item1 first item to be compared, has second item subtracted from it.
+	 * @param item2 second item to be compared.
+	 * @return the numerical difference between the two Objects
 	 */
 	public double comparisonDifference(Object item1, Object item2)
 	{
@@ -204,9 +235,9 @@ public class LinkedList
 	}
 	
 	/**
-	 * 
-	 * @param inAscendingOrder
-	 * @param byName
+	 * Sorts the linked list in either Ascending or Decending order, and either by name or by area, depending upon the parameters given.
+	 * @param inAscendingOrder boolean of if the list is to be sorted in ascending or decending order
+	 * @param byName boolean of if the list is to be sorted by name or by area
 	 */
 	public void sort(boolean inAscendingOrder, boolean byName)
 	{
@@ -232,7 +263,6 @@ public class LinkedList
 			}
 			//So now n stands for a place where spot belongs
 			//now needs to change all of the pointers around so spot is in the place to the left of n is currently hovering.
-			//System.out.println("\t\t\t\tNow putting item where it belongs, to the left of n");
 			
 			//in order to prevent infinite loops, if the two values are the same then skip putting the spot in front of n
 			if(n.previousItem!=null && comparisonDifference((byName ? n.previousItem.payload.pilotName:n.previousItem.payload.patrolArea),k)==0)
@@ -263,20 +293,13 @@ public class LinkedList
 		} 
 		
 		resetValues(spot);
-		
-		/*for(int i = 1; i<list.size(); ++i)
-		{
-			Object k = list.get(i);
-			int j = i-1;
-			while(j>=0 && comparisonDifference(list.get(j),k)>0)
-			{
-				list.set(j+1, list.get(j));
-				j = j-1;
-			}
-			list.set(j+1, k);
-		}*/
+
 	}
 	
+	/**
+	 * If the head and tail pointers of the list get messed up, uses a pointer variable connected to at least one part in the list to reset them.
+	 * @param spot a pointer to a value in the linked list that can be used to reset others.
+	 */
 	private void resetValues(Node<Payload> spot)
 	{
 		while(spot.previousItem!=null)

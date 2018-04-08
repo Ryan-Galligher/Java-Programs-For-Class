@@ -103,14 +103,21 @@ public class Main
 		}catch(Exception e) {return null;}
 	}
 	
+	/**
+	 * Reads from the Commands file, filters out incorrect commands, executes the commands and saves the output to a String to be returned
+	 * @param s Scanner to the file that contains the commands
+	 * @return The output of all the commands contained in the file, split by /r/n
+	 */
 	private static String readFromFile2(Scanner s)
 	{
 		System.out.println("\tEntered readFromFile2");
 		String output="";
+		//For every valid line within the file
 		while(canContinueReadingFile(s))
 		{
 			String str = s.nextLine();
 			System.out.println("\t\tdoes " + str + " match as a command regex? " + str.matches(COMMANDREGEX));
+			//If the command isn't in a valid command format, then skip the current line
 			if(!str.matches(COMMANDREGEX))
 				continue;
 			if(str.matches(COMMANDREGEXSORT))
@@ -127,7 +134,6 @@ public class Main
 				{
 					double d = ((double)Math.round(Double.parseDouble(str)*100))/100.00;
 					output+=String.format("%30s\t\t%30f %9s\r\n", str,d,(list.containsArea(d) ? "found":"not found"));
-					//************************************************************************************************
 				}
 				if(str.matches(COMMANDREGEXNAME))
 				{
@@ -251,7 +257,12 @@ public class Main
 		return area;
 	}
 
-	
+	/**
+	 * Saves the given string of information and saves it to the given file
+	 * @param info The String of information that is to be saved to the file
+	 * @param file The file that the String is to be saved to
+	 * @throws FileNotFoundException
+	 */
 	private static void saveToFile(String info, File file) throws FileNotFoundException
 	{
 		PrintWriter save = new PrintWriter(file);

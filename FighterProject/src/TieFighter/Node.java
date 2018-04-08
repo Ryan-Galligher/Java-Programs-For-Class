@@ -1,5 +1,10 @@
 package TieFighter;
  
+/*
+ * Name: 	Ryan Galligher
+ * Net ID:	rpg170130
+ */
+
 /**
  * Node stores Some information and holds references to other Nodes in the list
  * @author ryan
