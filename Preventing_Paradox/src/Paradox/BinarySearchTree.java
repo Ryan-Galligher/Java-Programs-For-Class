@@ -14,7 +14,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	
 	public BinarySearchTree()
 	{
-		root = null;
+		this(null);
 	}
 	public BinarySearchTree(Node<G> node)
 	{
@@ -46,15 +46,28 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	public int size() {return size(root);}
 	private int size(Node<G> node)
 	{
-		if(node == null)
+		if(node == null)	//if node is null, then went past leaf and so shouldn't count as part of the size
 			return 0;
 		
 		int right = size(node.getRight());
 		int left = size(node.getLeft());
 		
-		return right+left+1;
+		return right+left+1;	//returns size for left branch + right branch plus current item
 	}
-	
+	/**
+	 * Returns the depth of the current tree
+	 * @return
+	 */
+	public int depth() {return depth(root);}
+	private int depth(Node<G> node)
+	{
+		if(node == null)
+			return 0;
+		int right = depth(node.getRight());
+		int left  = depth(node.getLeft());
+		
+		return ((right>left) ? right:left) + 1;
+	}
 	
 	/**
 	 * Helper method that takes the item and inserts it into the array
@@ -78,9 +91,9 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 		}
 		else	//if item is larger than or equal to current node
 		{
-			if(node.getRight() != null)
+			if(node.getRight() != null)	//if right doesn't exist, insert the node directly there
 				insert(node.getRight(), item);
-			else
+			else	//if right does exist, continue down it
 				node.setRight(new Node<G>(item));
 		}
 	}
@@ -103,7 +116,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	/**
 	 * Deletes all items in the binary tree
 	 */
-	public void delete() {delete(null);}
+	public void delete() {delete(null);root=null;}
 	/**
 	 * Deletes the instance of the given item item in the binary tree
 	 * @param item
@@ -120,7 +133,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	        	auxRoot.setLeft(root);
 	        	boolean result = delete(item, root, auxRoot);
 	        	root = auxRoot.getLeft();
-	        	System.out.println("\t\t\tWe are out. the Current root is" + root);
+	        	System.out.println("\t\t\tWe are out. the Current root is " + root);
 	        	return result;
 	        }
 	        else
@@ -129,44 +142,44 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	}
 	private boolean delete(G item, Node<G> node, Node<G> parent)
 	{
-		if(node == null)
+		if(node == null)	//If the current node is null, exits current iteration (used when deleting whole tree and using later if(item==null))
 			return true;
 		
-		System.out.println("\t\t\t\tTHE WE ARE IN PART " + node.getPayload());
+		//System.out.println("\t\t\t\tTHE WE ARE IN PART " + node.getPayload());
 
 		
-		if (node.getPayload().compareTo(item) >0)
+		if (node.getPayload().compareTo(item) >0)	//If value less than current, go left in tree
 		{
             if (node.getLeft() != null)
                   return delete(item, node.getLeft(), node);
             else
                   return false;
-		} else if (node.getPayload().compareTo(item)<0) 
+		} else if (node.getPayload().compareTo(item)<0) //If value greater than current, go right
 		{
             if (node.getRight() != null)
                   return delete(item, node.getRight(), node);
             else
                   return false;
-		} else 
+		} else //If value same as current OR item==null (which means delete entire tree)
 		{
-			boolean isRight = true;
-            if (node.getLeft() != null && node.getRight() != null) {
-                  node.setPayload(minValue(node.getRight()));
-                  delete(node.getPayload(), node.getRight(), node);
-            } else if (node.equals(parent.getLeft())) {
+			boolean isRight = true;	//Used for if deleting everything, to make sure to recall correct node for parent
+            if (node.getLeft() != null && node.getRight() != null) {	//If the current node has two filled branches, then it can't be outright deleted
+                  node.setPayload(minValue(node.getRight()));	//so in order to get around that, overwrite the current value with the smallest value greater than current
+                  delete(node.getPayload(), node.getRight(), node);	//Then go and delete the value we just overwrote current value with
+            } else if (node.equals(parent.getLeft())) {	//node is a branch with only a single (or no) child, then need to overwrite the parent's value for node with the child of this current node (or null if leaf)
             	isRight=false;
             	parent.setLeft((node.getLeft() != null) ? node.getLeft():node.getRight());
             } else if (node.equals(parent.getRight())) {
-            	parent.setRight((node.getLeft() != null) ? node.getLeft():node.getRight());
+            	parent.setRight((node.getLeft() != null) ? node.getLeft():node.getRight());	//same as previous if statment but for opposite side
             }
             
-            if(!node.getPayload().equals(item))
+            if(item != null)	//If you aren't deleting the entire tree, then exit out of the delete method, else redelete the paren'ts connection with this node
             	return true;
             else
             	return delete(item, (isRight) ? parent.getRight():parent.getLeft(), parent);
 		}
 		
-		/*
+		/*Previous attempt, left for reference
 		if(node == null)
 			return false;
 		if(item == null)
@@ -199,6 +212,11 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 		}
 		*/
 	}
+	/**
+	 * Used by the delete function to find the lowest value higher than node when started and returns that value
+	 * @param node
+	 * @return
+	 */
 	private G minValue(Node<G> node)
 	{
 		if(node.getLeft() == null)
@@ -227,7 +245,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 		if(!right.equals("") || !left.equals(""))
 			center+=" ";
 		
-		return node.getPayload().toString() + " " + left + right;
+		return center + left + right;
 	}
 	
 	/**
@@ -252,7 +270,21 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 		
 		return left + center + right;
 	}
-	
+	/**
+	 * Returns a String of the items in the opposite sorted order
+	 * @return
+	 */
+	public String reverseOrder() {return reverseOrder(root);}
+	public String reverseOrder(Node<G> node)
+	{
+		String[] str = infix().split(" ");
+		String output = "";
+		for(int i = str.length-1; i >= 0; i--)
+		{
+			output+=str[i] + " ";
+		}
+		return output.substring(0, output.length()-1);
+	}
 	/**
 	 * Returns a String of all of the items in the tree in postfix form
 	 * @return

@@ -68,24 +68,26 @@ public class Main
 	public static String calculateDefiniteIntegral(BinarySearchTree<Payload> calculated, String bounds)
 	{
 		System.out.println("\tAbout to calculateDefiniteIntegral");
-		String output = calculated.infix();
+		String output = calculated.reverseOrder();
+		if(output.charAt(0) == '+')	//Formats the output so the first item doesn't have an unnecessary + in front of it
+			output = output.substring(1, output.length());
 		
-		if(!bounds.matches(BOUNDSREGEX))
+		if(!bounds.matches(BOUNDSREGEX))	//If we aren't supposed to find a definite integral, then simply return the string of the improper integral with the + C
 			return output + " + C";
 		
-		ArrayList<Payload> array = tree.printAsArrayList();
+		ArrayList<Payload> array = tree.printAsArrayList();	//Gets an arrrayList of all the items in the BinaryTree
 		String s[] = bounds.split("\\|");
 		int b1 = Integer.parseInt(s[0]);
 		int b2 = Integer.parseInt(s[1]);
 		double total=0.0;
-		for(int i = 0; i < array.size(); i++)
+		for(int i = 0; i < array.size(); i++)	//For every item in the BinarySearch, find the upper and lower bound for it and subtract the lower from the upper
 		{
-			total += tree.search(array.get(i)).getPayload().calculateNumber(b1);
+			total += tree.search(array.get(i)).getPayload().calculateNumber(b2);
 			total -= tree.search(array.get(i)).getPayload().calculateNumber(b1);
 		}
 		System.out.println("\tFinished to calculateDefiniteIntegral");
 		
-		return String.format("%s = %.3f", tree.infix(), total);
+		return String.format("%s, %s = %.3f", output,bounds, total);
 	}
 	/**
 	 * Makes the tree calculate the unbounded integral
@@ -96,7 +98,7 @@ public class Main
 	{
 		System.out.println("\tAbout to calculateIntegral");
 		ArrayList<Payload> array = tree.printAsArrayList();
-		for(int i = 0; i < array.size(); i++)
+		for(int i = 0; i < array.size(); i++)	//Goes through each item in the BinaryTree and makes the Payloads calculate their Integrals
 		{
 			tree.search(array.get(i)).getPayload().takeIntegral();
 		}
@@ -113,19 +115,33 @@ public class Main
 		ArrayList<Payload> array = tree.printAsArrayList();
 		for(int i = 1; i < array.size(); i++)
 		{
-			if(array.get(i).getExponent() == array.get(i-1).getExponent())
+			for (int a = 0; a < array.size();a++)
 			{
-				Payload pay = array.get(i).addSameExponent(array.get(i-1));
-				tree.delete(array.get(i));
-				tree.delete(array.get(i-1));
-				tree.insert(pay);
-				
-				array.remove(i--);
-				array.remove(i);
-				array.set(i--, pay);
+				//Iterates through each item and compares to each other item to see if any of them are of the same exponent. If they are then combine them together
+				System.out.println("\t\tCurrent item " + i + " is : " + array.get(i) + "\t and the value " + a + " compared to is: " + array.get(a));
+				if(i!=a && array.get(i).getExponent() == array.get(a).getExponent())
+				{
+					System.out.println("\t\t\tCOMBINING THESE");
+					Payload pay = array.get(i).addSameExponent(array.get(a));
+					tree.delete(array.get(i));
+					tree.delete(array.get(a));
+					tree.insert(pay);
+					
+					//If i > a, then when both i and a are deleted, then i decreases by 2 and a decreases by 1.
+					boolean change = (i>a);
+					array.remove(i);
+					array.remove((change) ? a:a-1);	//if a was larger, than after i was removed then a is one spot closer than what is currently represented
+					i -= (change) ? 2:1;
+					a -= (change) ? 1:2;
+					if(i<0)		//if either were at 0 and are decreased under that, then reset them back to 0
+						i = 0;
+					if(a<0)
+						a=0;
+					array.add(pay);
+				}
 			}
 		}
-		System.out.println("\tFinished combining like terms");
+		System.out.println("\tFinished combining like terms, the items are now: " + tree.infix());
 		
 		/*String[] s = tree.infix().split(" ");	//Splits the output of the binary tree into different items
 		for (int i = 1; i < s.length; i++)
@@ -155,7 +171,7 @@ public class Main
 		String[] parts = line.split(" ");
 		String bounds = parts[0];
 		
-		String reconstruction = (parts[1].contains("-") && !parts[1].contains("^-")) ? parts[1]:("+" + parts[1]);	//This is used to reconstruct the String without the bounds and the dx at the end, and without spaces, so that it can be properly parsed for proper reading
+		String reconstruction = (parts[1].charAt(0) != '-' && parts[1].charAt(0) != '+') ? ("+" + parts[1]):parts[1];	//This is used to reconstruct the String without the bounds and the dx at the end, and without spaces, so that it can be properly parsed for proper reading
 		for (int i = 2; i < parts.length - 1; i++)	//iterates over all but the first and last part, as the first will contain the bounds and the last will be dx
 		{
 			reconstruction += parts[i];
@@ -170,7 +186,10 @@ public class Main
 		{
 			System.out.println("\t\t\tThe current part to be parsed is currently: " + parts[i]);
 			if(!parts[i].matches(VALID))
+			{
+				System.out.println("\t\t\t\tThe String is NOT Valid");
 				continue;
+			}
 			if( !parts[i].matches("[\\-\\+0-9]*x\\^[\\-\\+0-9]*") && parts[i].contains("x"))	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
 			{
 				System.out.println("\t\t\tThe String does NOT in fact contain ^");
@@ -178,16 +197,16 @@ public class Main
 			}
 			if(!parts[i].contains("x"))
 			{
-				System.out.println("\t\t\tThe String does NOT in fact contain X");
+				System.out.println("\t\t\t\tThe String does NOT in fact contain X");
 				parts[i] = parts[i] + "x^0";
 			}
 			if(parts[i].matches("[\\-\\+]x[\\^\\-\\+0-9]*"))	//If the item doesn't contain a number in front of x (implied 1), adds in 1 to ease conversion
 			{
-				System.out.println("\t\t\tThe String does in fact contain [+-]x");
+				System.out.println("\t\t\t\tThe String does in fact contain [+-]x");
 				parts[i] = parts[i].replaceFirst("x", "1x");
 			}
 			
-			System.out.println("\t\tFinal to be cut is now: " + parts[i]);
+			System.out.println("\t\t\tFinal to be cut is now: " + parts[i]);
 			coeff = parts[i].split("x")[0];
 			exp = parts[i].split("\\^")[1];
 			
