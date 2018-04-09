@@ -13,9 +13,12 @@ import java.util.Scanner;
  */
 public class Main
 {
-	public static final String INTEGRALREGEX = "((-?\\d+|-?\\d+)|||)\\s((\\s?([0-9]+||[0-9]*x(^-?[0-9]+)?))||[+-])+\\sdx";
-	public static final String BOUNDSREGEX = "(-?\\d+|-?\\d+)";
-	public static final String SPLITINFONOSPACE = "";
+	//regex everything true = "[A-Za-z0-9\\-\\+\\s\\|\\^]*"
+	static public final String WITH_DELIMITER = "((?<=%1$s)|(?=%1$s))";	//Old attempt to use lookbehind to cut a string in parts
+	public static final String INTEGRALREGEX = "((-?\\d+\\|-?\\d+)||\\|)\\s(\\s?([0-9]+||[0-9]*x(\\^\\-?[0-9]+)?||[\\+\\-]))+\\sdx";
+	public static final String BOUNDSREGEX = "(-?\\d+\\|-?\\d+)";
+	public static final String SPLITINFONOSPACE = "(?=(?<!\\^)[+-])";
+	public static final String VALID = "[\\+\\-][0-9]*x(\\^\\-?[0-9]+)?";	
 	public static final String INPUTFILENAME = "integrals.txt";
 	public static final String OUTPUTFILENAME = "answers.txt";
 	
@@ -35,10 +38,13 @@ public class Main
 		}
 		tree = new BinarySearchTree<Payload>();
 		
+		System.out.println("Set up everything, about to enter while loop");
+		
 		while(in.hasNext())	//for every Integral in the file
 		{
 			String s = in.nextLine();
-			if(!s.contains(INTEGRALREGEX))	//If the given line does not fit within the definition of integral, skip it
+			System.out.println("\tAbout to test if the line is valid. Is " + s + " valid?: " + s.matches(INTEGRALREGEX));
+			if(!s.matches(INTEGRALREGEX))	//If the given line does not fit within the definition of integral, skip it
 				continue;
 			integralPart = parseIntoTree(s, tree);
 			combineLikeTerms(tree);
@@ -59,11 +65,11 @@ public class Main
 	 */
 	public static String calculateDefiniteIntegral(BinarySearchTree<Payload> calculated, String bounds)
 	{
-		if(!bounds.contains(BOUNDSREGEX))
+		if(!bounds.matches(BOUNDSREGEX))
 			return calculated.infix() + " + C";
 		
 		ArrayList<Payload> array = tree.printAsArrayList();
-		String s[] = bounds.split("|");
+		String s[] = bounds.split("\\|");
 		int b1 = Integer.parseInt(s[0]);
 		int b2 = Integer.parseInt(s[1]);
 		double total=0.0;
@@ -73,7 +79,7 @@ public class Main
 			total -= tree.search(array.get(i)).getPayload().calculateNumber(b1);
 		}
 		
-		return String.format("%s = $f.3", tree.infix(), total);
+		return String.format("%s = %f0.3", tree.infix(), total);
 	}
 	/**
 	 * Makes the tree calculate the unbounded integral
@@ -139,16 +145,37 @@ public class Main
 		String[] parts = line.split(" ");
 		String bounds = parts[0];
 		
-		String reconstruction = (parts[1].contains("[+-]")) ? parts[1]:("+" + parts[1]);	//This is used to reconstruct the String without the bounds and the dx at the end, and without spaces, so that it can be properly parsed for proper reading
+		String reconstruction = (parts[1].contains("-") && !parts[1].contains("^-")) ? parts[1]:("+" + parts[1]);	//This is used to reconstruct the String without the bounds and the dx at the end, and without spaces, so that it can be properly parsed for proper reading
 		for (int i = 2; i < parts.length - 1; i++)	//iterates over all but the first and last part, as the first will contain the bounds and the last will be dx
 		{
 			reconstruction += parts[i];
 		}
-		parts = reconstruction.split(SPLITINFONOSPACE);
 		
-		for(int i = 0; i < parts.length; i++)
+		System.out.println("\t\tParsing into a tree, the bound is taken as " + bounds + "\t and the reconstruction is taken as: " + reconstruction);
+		parts = reconstruction.split(SPLITINFONOSPACE);
+		String coeff;
+		String exp;
+		
+		for(int i = 0; i < parts.length; i++)	//Adds in every item that is parsed
 		{
-			tree.insert(new Payload(Integer.parseInt(parts[i].split("x")[0]), Integer.parseInt(parts[i].split("^")[1])));	//Creates new Payload from the coefficient and exponent, and adds it to the Binary Search Tree
+			System.out.println("\t\t\tThe current part to be parsed is currently: " + parts[i]);
+			if(!parts[i].matches(VALID))
+				continue;
+			if( !parts[i].matches("[\\-\\+0-9x]*\\^[\\-\\+0-9]*") && parts[i].matches("[\\-\\+]*[0-9]*x[\\^\\-\\+0-9]*") )	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
+			{
+				System.out.println("\t\t\tThe String does NOT in fact contain ^");
+				parts[i]=parts[i].replaceAll("x", "x^1");
+			}
+			if(parts[i].matches("[\\-\\+]x[\\^\\-\\+0-9]*"))
+			{
+				System.out.println("\t\t\tThe String does in fact contain [+-]x");
+				parts[i] = parts[i].replaceFirst("x", "1x");
+			}
+			System.out.println("\t\tFinal to be cut is now: " + parts[i]);
+			coeff = parts[i].split("x")[0];
+			exp = parts[i].split("\\^")[1];
+			
+			tree.insert(new Payload(Integer.parseInt(coeff), Integer.parseInt(exp)));	//Creates new Payload from the coefficient and exponent, and adds it to the Binary Search Tree
 		}
 		
 		
