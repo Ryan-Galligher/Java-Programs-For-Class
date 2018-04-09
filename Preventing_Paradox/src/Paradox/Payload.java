@@ -65,9 +65,13 @@ public class Payload implements Comparable<Object>
 	 */
 	public void takeIntegral()
 	{
-		if(exponent != -1)
+		if(exponent != -1)	//If the exponent is a -1, then the integral of it is a natural log
 		{
-			coefficientFraction = "(" + coefficient + "/" + ++exponent + ")";
+			exponent++;
+			if(coefficient % exponent != 0 )
+				coefficientFraction = "(" + (int)coefficient + "/" + exponent + ")";
+			else
+				coefficientFraction = "" + (int)(coefficient/exponent);
 			coefficient /= exponent;
 		}
 		else

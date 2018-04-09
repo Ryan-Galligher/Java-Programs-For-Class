@@ -120,6 +120,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	        	auxRoot.setLeft(root);
 	        	boolean result = delete(item, root, auxRoot);
 	        	root = auxRoot.getLeft();
+	        	System.out.println("\t\t\tWe are out. the Current root is" + root);
 	        	return result;
 	        }
 	        else
@@ -128,6 +129,12 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	}
 	private boolean delete(G item, Node<G> node, Node<G> parent)
 	{
+		if(node == null)
+			return true;
+		
+		System.out.println("\t\t\t\tTHE WE ARE IN PART " + node.getPayload());
+
+		
 		if (node.getPayload().compareTo(item) >0)
 		{
             if (node.getLeft() != null)
@@ -142,15 +149,21 @@ public class BinarySearchTree<G extends Comparable<? super G>>
                   return false;
 		} else 
 		{
+			boolean isRight = true;
             if (node.getLeft() != null && node.getRight() != null) {
                   node.setPayload(minValue(node.getRight()));
                   delete(node.getPayload(), node.getRight(), node);
-            } else if (parent.getLeft().equals(node)) {
+            } else if (node.equals(parent.getLeft())) {
+            	isRight=false;
             	parent.setLeft((node.getLeft() != null) ? node.getLeft():node.getRight());
-            } else if (parent.getRight().equals(node)) {
+            } else if (node.equals(parent.getRight())) {
             	parent.setRight((node.getLeft() != null) ? node.getLeft():node.getRight());
             }
-            return true;
+            
+            if(!node.getPayload().equals(item))
+            	return true;
+            else
+            	return delete(item, (isRight) ? parent.getRight():parent.getLeft(), parent);
 		}
 		
 		/*
@@ -195,7 +208,7 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	}
 	
 	/**
-	 * Returns a Sring of all of the items in the tree in prefix form
+	 * Returns a String of all of the items in the tree in prefix form
 	 * @return
 	 */
 	public String prefix() {return prefix(root);}
@@ -205,13 +218,16 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 			return "";
 		String left = prefix(node.getLeft());
 		String right = prefix(node.getRight());
+		String center = node.getPayload().toString();
 		
 		if(!left.equals(""))
 			left += " ";
 		if(!right.equals(""))
 			right += " ";
+		if(!right.equals("") || !left.equals(""))
+			center+=" ";
 		
-		return node.getPayload().toString() + left + right;
+		return node.getPayload().toString() + " " + left + right;
 	}
 	
 	/**
@@ -223,15 +239,18 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	{
 		if(node == null)
 			return "";
-		String left = prefix(node.getLeft());
-		String right = prefix(node.getRight());
+		String center = node.getPayload().toString();
+		String left = infix(node.getLeft());
+		String right = infix(node.getRight());
 		
 		if(!left.equals(""))
 			left += " ";
 		if(!right.equals(""))
 			right += " ";
+		if(!right.equals(""))
+			center+=" ";
 		
-		return left + node.getPayload().toString() + right;
+		return left + center + right;
 	}
 	
 	/**
@@ -243,14 +262,17 @@ public class BinarySearchTree<G extends Comparable<? super G>>
 	{
 		if(node == null)
 			return "";
-		String left = prefix(node.getLeft());
-		String right = prefix(node.getRight());
+		String center = node.getPayload().toString();
+		String left = postfix(node.getLeft());
+		String right = postfix(node.getRight());
 		
 		if(!left.equals(""))
 			left += " ";
 		if(!right.equals(""))
 			right += " ";
+		if(!right.equals("") || !left.equals(""))
+			center = " " + center;
 		
-		return left + right + node.getPayload().toString();
+		return left + right + center;
 	}
 }

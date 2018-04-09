@@ -18,7 +18,7 @@ public class Main
 	public static final String INTEGRALREGEX = "((-?\\d+\\|-?\\d+)||\\|)\\s(\\s?([0-9]+||[0-9]*x(\\^\\-?[0-9]+)?||[\\+\\-]))+\\sdx";
 	public static final String BOUNDSREGEX = "(-?\\d+\\|-?\\d+)";
 	public static final String SPLITINFONOSPACE = "(?=(?<!\\^)[+-])";
-	public static final String VALID = "[\\+\\-][0-9]*x(\\^\\-?[0-9]+)?";	
+	public static final String VALID = "[\\+\\-][0-9]*x?(\\^\\-?[0-9]+)?";	
 	public static final String INPUTFILENAME = "integrals.txt";
 	public static final String OUTPUTFILENAME = "answers.txt";
 	
@@ -50,6 +50,7 @@ public class Main
 			System.out.println("\tParsed into tree. What is currently stored in tree in order is: " + tree.infix());
 			combineLikeTerms(tree);
 			integral = calculateDefiniteIntegral(calculateIntegral(tree), integralPart);
+			System.out.println("\tThe Finished item to be printed to the file is: " + integral + "\n\n\n");
 			out.println(integral);
 			tree.delete();
 		}
@@ -66,8 +67,11 @@ public class Main
 	 */
 	public static String calculateDefiniteIntegral(BinarySearchTree<Payload> calculated, String bounds)
 	{
+		System.out.println("\tAbout to calculateDefiniteIntegral");
+		String output = calculated.infix();
+		
 		if(!bounds.matches(BOUNDSREGEX))
-			return calculated.infix() + " + C";
+			return output + " + C";
 		
 		ArrayList<Payload> array = tree.printAsArrayList();
 		String s[] = bounds.split("\\|");
@@ -79,8 +83,9 @@ public class Main
 			total += tree.search(array.get(i)).getPayload().calculateNumber(b1);
 			total -= tree.search(array.get(i)).getPayload().calculateNumber(b1);
 		}
+		System.out.println("\tFinished to calculateDefiniteIntegral");
 		
-		return String.format("%s = %f0.3", tree.infix(), total);
+		return String.format("%s = %.3f", tree.infix(), total);
 	}
 	/**
 	 * Makes the tree calculate the unbounded integral
@@ -89,11 +94,13 @@ public class Main
 	 */
 	public static BinarySearchTree<Payload> calculateIntegral(BinarySearchTree<Payload> tree)
 	{
+		System.out.println("\tAbout to calculateIntegral");
 		ArrayList<Payload> array = tree.printAsArrayList();
 		for(int i = 0; i < array.size(); i++)
 		{
 			tree.search(array.get(i)).getPayload().takeIntegral();
 		}
+		System.out.println("\tFinished to calculateIntegral");
 		return tree;
 	}
 	/**
@@ -102,7 +109,7 @@ public class Main
 	 */
 	public static void combineLikeTerms(BinarySearchTree<Payload> tree)
 	{
-		System.out.print("\tAbout to combineLikeTerms");
+		System.out.println("\tAbout to combineLikeTerms");
 		ArrayList<Payload> array = tree.printAsArrayList();
 		for(int i = 1; i < array.size(); i++)
 		{
@@ -118,6 +125,7 @@ public class Main
 				array.set(i--, pay);
 			}
 		}
+		System.out.println("\tFinished combining like terms");
 		
 		/*String[] s = tree.infix().split(" ");	//Splits the output of the binary tree into different items
 		for (int i = 1; i < s.length; i++)
@@ -163,16 +171,22 @@ public class Main
 			System.out.println("\t\t\tThe current part to be parsed is currently: " + parts[i]);
 			if(!parts[i].matches(VALID))
 				continue;
-			if( !parts[i].matches("[\\-\\+0-9]*x\\^[\\-\\+0-9]*") )	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
+			if( !parts[i].matches("[\\-\\+0-9]*x\\^[\\-\\+0-9]*") && parts[i].contains("x"))	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
 			{
 				System.out.println("\t\t\tThe String does NOT in fact contain ^");
 				parts[i]=parts[i].replaceAll("x", "x^1");
+			}
+			if(!parts[i].contains("x"))
+			{
+				System.out.println("\t\t\tThe String does NOT in fact contain X");
+				parts[i] = parts[i] + "x^0";
 			}
 			if(parts[i].matches("[\\-\\+]x[\\^\\-\\+0-9]*"))	//If the item doesn't contain a number in front of x (implied 1), adds in 1 to ease conversion
 			{
 				System.out.println("\t\t\tThe String does in fact contain [+-]x");
 				parts[i] = parts[i].replaceFirst("x", "1x");
 			}
+			
 			System.out.println("\t\tFinal to be cut is now: " + parts[i]);
 			coeff = parts[i].split("x")[0];
 			exp = parts[i].split("\\^")[1];
