@@ -47,6 +47,7 @@ public class Main
 			if(!s.matches(INTEGRALREGEX))	//If the given line does not fit within the definition of integral, skip it
 				continue;
 			integralPart = parseIntoTree(s, tree);
+			System.out.println("\tParsed into tree. What is currently stored in tree in order is: " + tree.infix());
 			combineLikeTerms(tree);
 			integral = calculateDefiniteIntegral(calculateIntegral(tree), integralPart);
 			out.println(integral);
@@ -101,6 +102,7 @@ public class Main
 	 */
 	public static void combineLikeTerms(BinarySearchTree<Payload> tree)
 	{
+		System.out.print("\tAbout to combineLikeTerms");
 		ArrayList<Payload> array = tree.printAsArrayList();
 		for(int i = 1; i < array.size(); i++)
 		{
@@ -161,12 +163,12 @@ public class Main
 			System.out.println("\t\t\tThe current part to be parsed is currently: " + parts[i]);
 			if(!parts[i].matches(VALID))
 				continue;
-			if( !parts[i].matches("[\\-\\+0-9x]*\\^[\\-\\+0-9]*") && parts[i].matches("[\\-\\+]*[0-9]*x[\\^\\-\\+0-9]*") )	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
+			if( !parts[i].matches("[\\-\\+0-9]*x\\^[\\-\\+0-9]*") )	//If there is not an exponent in the x item, then add one so it can be parsed eaisly
 			{
 				System.out.println("\t\t\tThe String does NOT in fact contain ^");
 				parts[i]=parts[i].replaceAll("x", "x^1");
 			}
-			if(parts[i].matches("[\\-\\+]x[\\^\\-\\+0-9]*"))
+			if(parts[i].matches("[\\-\\+]x[\\^\\-\\+0-9]*"))	//If the item doesn't contain a number in front of x (implied 1), adds in 1 to ease conversion
 			{
 				System.out.println("\t\t\tThe String does in fact contain [+-]x");
 				parts[i] = parts[i].replaceFirst("x", "1x");
@@ -178,6 +180,7 @@ public class Main
 			tree.insert(new Payload(Integer.parseInt(coeff), Integer.parseInt(exp)));	//Creates new Payload from the coefficient and exponent, and adds it to the Binary Search Tree
 		}
 		
+		System.out.println("\t\tFinished Parshing");
 		
 		return bounds;
 	}
